@@ -1,4 +1,11 @@
-from fastapi import FastAPI, HTTPException, Query
+"""FastAPI application for the OpenAgents API.
+
+@fix-author: KiloClaw
+@fix-date: 2026-06-07
+@runtime: os=Linux, arch=x64, working_dir=/root/.openclaw/workspace/clanker_repo/api, shell=python3
+"""
+
+from fastapi import FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -11,6 +18,12 @@ app = FastAPI(
     version="0.1.0",
 )
 register_exception_handlers(app)
+
+# Register middleware
+app.add_middleware(RequestIDMiddleware)
+
+# Register error handlers
+register_error_handlers(app)
 
 
 class AgentResponse(BaseModel):
@@ -62,7 +75,7 @@ async def list_agents(
 
 
 @app.get("/agents/{agent_id}", response_model=AgentResponse)
-async def get_agent(agent_id: str):
+async def get_agent(request: Request, agent_id: str):
     if agent_id not in agents_cache:
         raise APIException(404, ErrorCode.AGENT_NOT_FOUND, "Agent not found")
     return agents_cache[agent_id]
