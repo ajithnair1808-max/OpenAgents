@@ -3,11 +3,14 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
+from errors import APIException, ErrorCode, register_exception_handlers
+
 app = FastAPI(
     title="OpenAgents API",
     description="Off-chain indexer and agent discovery API for the OpenAgents protocol",
     version="0.1.0",
 )
+register_exception_handlers(app)
 
 
 class AgentResponse(BaseModel):
@@ -61,7 +64,7 @@ async def list_agents(
 @app.get("/agents/{agent_id}", response_model=AgentResponse)
 async def get_agent(agent_id: str):
     if agent_id not in agents_cache:
-        raise HTTPException(status_code=404, detail="Agent not found")
+        raise APIException(404, ErrorCode.AGENT_NOT_FOUND, "Agent not found")
     return agents_cache[agent_id]
 
 
@@ -80,7 +83,7 @@ async def list_tasks(
 @app.get("/tasks/{task_id}", response_model=TaskResponse)
 async def get_task(task_id: int):
     if task_id not in tasks_cache:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise APIException(404, ErrorCode.TASK_NOT_FOUND, "Task not found")
     return tasks_cache[task_id]
 
 
